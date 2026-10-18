@@ -9,15 +9,15 @@ the codebase needs to know which provider is in use.
 
 import os
 
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_ollama import ChatOllama, OllamaEmbeddings
 
-CHAT_MODEL = os.getenv("RAG_CHAT_MODEL", "gpt-4o-mini")
-EMBEDDING_MODEL = os.getenv("RAG_EMBEDDING_MODEL", "text-embedding-3-small")
-
-
-def get_chat_model(temperature: float = 0.0) -> ChatOpenAI:
-    return ChatOpenAI(model=CHAT_MODEL, temperature=temperature)
+CHAT_MODEL = os.getenv("RAG_CHAT_MODEL", "llama3.2:3b")
+EMBEDDING_MODEL = os.getenv("RAG_EMBEDDING_MODEL", "nomic-embed-text")
 
 
-def get_embeddings() -> OpenAIEmbeddings:
-    return OpenAIEmbeddings(model=EMBEDDING_MODEL)
+def get_chat_model(temperature: float = 0.0) -> ChatOllama:
+    return ChatOllama(model=CHAT_MODEL, temperature=temperature)
+
+
+def get_embeddings() -> OllamaEmbeddings:
+    return OllamaEmbeddings(model=EMBEDDING_MODEL)

@@ -1,23 +1,31 @@
 """Chunking: split loaded Documents into retrieval-sized pieces.
 
 PDF/TXT content is prose, so it's split by *token* count (via tiktoken) with
-overlap — token count is what actually determines how much fits in an LLM's
+overlap. Token count is what actually determines how much fits in an LLM's
 context window, so sizing chunks by characters is a common but sloppy
 approximation. CSV rows are already atomic units of meaning (one row = one
-record) — splitting a row would sever a record's fields from each other for
+record); splitting a row would sever a record's fields from each other for
 no benefit, so CSV rows are kept as one chunk each instead.
 
 Every chunk gets a `chunk_id` metadata field (e.g. "handbook.pdf#chunk3" or
 "employees.csv#row12") that the RAG prompt uses to cite its source.
+
+Chunk size and overlap can be overridden with the RAG_CHUNK_SIZE and
+RAG_CHUNK_OVERLAP environment variables (used for the chunking experiments).
 """
+
+import os
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+CHUNK_SIZE = int(os.getenv("RAG_CHUNK_SIZE", "300"))
+CHUNK_OVERLAP = int(os.getenv("RAG_CHUNK_OVERLAP", "50"))
+
 PROSE_SPLITTER = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     encoding_name="cl100k_base",
-    chunk_size=300,
-    chunk_overlap=50,
+    chunk_size=CHUNK_SIZE,
+    chunk_overlap=CHUNK_OVERLAP,
     separators=["\n\n", "\n", ". ", " ", ""],
 )
 
