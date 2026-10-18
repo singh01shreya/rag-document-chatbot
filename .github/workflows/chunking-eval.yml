@@ -1,0 +1,49 @@
+name: chunking-eval
+
+on: workflow_dispatch
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { size: 100, overlap: 20 }
+          - { size: 200, overlap: 40 }
+          - { size: 300, overlap: 50 }
+          - { size: 500, overlap: 100 }
+          - { size: 800, overlap: 100 }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Ollama and pull models
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          (ollama serve > ollama.log 2>&1 &)
+          for i in $(seq 1 30); do curl -s localhost:11434 && break; sleep 2; done
+          ollama pull llama3.2:3b
+          ollama pull nomic-embed-text
+
+      - name: Run eval
+        env:
+          RAG_CHUNK_SIZE: ${{ matrix.size }}
+          RAG_CHUNK_OVERLAP: ${{ matrix.overlap }}
+        run: |
+          echo "## chunk_size=${{ matrix.size }}, overlap=${{ matrix.overlap }}" >> $GITHUB_STEP_SUMMARY
+          python eval/run_eval.py | tee result.txt
+          cat result.txt >> $GITHUB_STEP_SUMMARY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-${{ matrix.size }}-${{ matrix.overlap }}
+          path: result.txt
