@@ -4,7 +4,7 @@ on: workflow_dispatch
 
 jobs:
   eval:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
     strategy:
       fail-fast: false
@@ -35,12 +35,13 @@ jobs:
           ollama pull nomic-embed-text
 
       - name: Run eval
+        shell: bash
         env:
           RAG_CHUNK_SIZE: ${{ matrix.size }}
           RAG_CHUNK_OVERLAP: ${{ matrix.overlap }}
         run: |
           echo "## chunk_size=${{ matrix.size }}, overlap=${{ matrix.overlap }}" >> $GITHUB_STEP_SUMMARY
-          python eval/run_eval.py | tee result.txt
+          python eval/run_eval.py 2>&1 | tee result.txt
           cat result.txt >> $GITHUB_STEP_SUMMARY
 
       - uses: actions/upload-artifact@v4
